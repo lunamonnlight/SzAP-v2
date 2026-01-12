@@ -2,18 +2,20 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>System Arsenał - Panel Główny</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>System Arsenał - Panel Główny</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/logo-v2.png">
+    <link rel="apple-touch-icon" href="/logo-v2.png">
+    <meta name="theme-color" content="#0f172a">
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Special+Elite&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-   <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/png" href="/logo-v2.png"> 
-<link rel="apple-touch-icon" href="/logo-v2.png"><meta name="theme-color" content="#0f172a">
-<meta name="theme-color" content="#0f172a">
+    
     <style>
-        /* --- STYLE BAZOWE (Skrócone dla czytelności, reszta bez zmian) --- */
-        :root { --bg-color: #0f172a; --accent: #667eea; --glass: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.1); --text: #fff; --danger: #ff4757; --warning: #f1c40f; }
+        :root { --bg-color: #0f172a; --accent: #667eea; --glass: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.1); --text: #fff; }
         body { background: var(--bg-color); color: var(--text); font-family: 'Poppins', sans-serif; margin: 0; display: flex; min-height: 100vh; overflow-x: hidden; }
         
         .background-blobs { position: fixed; width: 100%; height: 100%; z-index: -1; }
@@ -21,62 +23,71 @@
         .b1 { top: -10%; left: -10%; width: 600px; height: 600px; background: #764ba2; } 
         .b2 { bottom: -10%; right: -10%; width: 600px; height: 600px; background: #667eea; }
 
-        .sidebar { width: 280px; background: rgba(15,23,42,0.5); backdrop-filter: blur(20px); border-right: 1px solid var(--border); padding: 40px 30px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+        .sidebar { width: 280px; background: rgba(15,23,42,0.8); backdrop-filter: blur(20px); border-right: 1px solid var(--border); padding: 40px 30px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; z-index: 100; }
         .nav-item { padding: 14px 20px; margin-bottom: 8px; border-radius: 14px; color: #94a3b8; display: flex; align-items: center; gap: 15px; text-decoration: none; transition: 0.3s; }
         .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.05); color: #fff; }
-        .logo { font-size: 1.8rem; font-weight: 800; margin-bottom: 60px; color: #fff; }
+        .logo { font-size: 1.5rem; font-weight: 800; margin-bottom: 60px; color: #fff; display:flex; align-items:center; gap:10px; }
 
-        .main { flex: 1; padding: 50px; overflow-y: auto; }
+        .main { flex: 1; padding: 50px; overflow-y: auto; width: 100%; }
         
-        /* KARTY ZE ZDJĘCIAMI */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; margin-bottom: 60px; }
+        /* FILTRY KATEGORII */
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+        .filter-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #94a3b8;
+            padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-size: 0.9rem;
+        }
+        .filter-btn:hover, .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        /* KARTY */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; margin-bottom: 60px; }
         .card { background: var(--glass); backdrop-filter: blur(15px); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; position: relative; }
         .card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.3); }
         
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
-        
-        /* Nowy styl dla obrazka w karcie */
-        .img-container {
-            width: 60px; height: 60px; border-radius: 16px; overflow: hidden;
-            background: #000; border: 1px solid rgba(255,255,255,0.2);
-            display: flex; justify-content: center; align-items: center;
-        }
+        .img-container { width: 60px; height: 60px; border-radius: 16px; overflow: hidden; background: #000; border: 1px solid rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; }
         .card-img { width: 100%; height: 100%; object-fit: cover; }
-        .card-icon { font-size: 1.5rem; color: #fff; }
-
-        .card h3 { margin: 0 0 5px; font-size: 1.2rem; }
-        .card p { color: #94a3b8; font-size: 0.9rem; margin: 0; }
         
+        /* Badge Kategorii */
+        .cat-badge { 
+            position: absolute; top: 25px; right: 25px; 
+            font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 8px; text-transform: uppercase;
+        }
+        /* Kolory kategorii */
+        .cat-Bron { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .cat-Amunicja { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .cat-Mundury { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .cat-Pojazdy { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .cat-Inne { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+
         .controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
-        .btn-action { width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; }
+        .btn-action { width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer; color: #fff; display: flex; align-items: center; justify-content: center; }
         .btn-minus { background: rgba(255,255,255,0.1); }
         .btn-plus { background: var(--accent); }
 
         .add-panel { background: var(--glass); padding: 40px; border-radius: 30px; border: 1px solid var(--border); }
         input, select { background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 15px; border-radius: 12px; color: #fff; width: 100%; box-sizing: border-box; margin-bottom: 15px; }
-        
-        /* Input pliku */
-        input[type="file"] { padding: 10px; cursor: pointer; }
-        input[type="file"]::file-selector-button {
-            background: var(--accent); border: none; padding: 8px 15px; border-radius: 8px; color: #fff; margin-right: 15px; cursor: pointer;
-        }
-
+        input[type="file"] { padding: 10px; }
         .btn-submit { background: var(--accent); border: none; color: #fff; padding: 15px 30px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; }
 
-        /* MODALE */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(5px); }
+        /* MODALE I MEDIA QUERIES (Dla telefonu) */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(5px); }
         .modal-overlay.active { display: flex; }
-        .modal { background: #1e293b; padding: 30px; border-radius: 20px; width: 400px; border: 1px solid #333; }
-        .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+        .modal { background: #1e293b; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; border: 1px solid #333; }
         
-        /* DRUK */
+        @media (max-width: 768px) {
+            .sidebar { display: none; } /* Ukrywamy sidebar na telefonie */
+            .main { padding: 20px; }
+            .grid { grid-template-columns: 1fr; }
+            .filter-bar { overflow-x: auto; padding-bottom: 10px; flex-wrap: nowrap; }
+            .filter-btn { white-space: nowrap; }
+        }
+        
         @media print {
             body { background: #fff !important; color: #000 !important; display: block; }
-            .sidebar, .add-panel, .controls, .print-hide, .background-blobs { display: none !important; }
+            .sidebar, .add-panel, .controls, .filter-bar, .print-hide, .background-blobs { display: none !important; }
             .grid { display: block; }
-            .card { border: none; border-bottom: 1px solid #ccc; border-radius: 0; padding: 10px 0; page-break-inside: avoid; background: none !important; display: flex; align-items: center; gap: 20px; }
-            .img-container { border: 1px solid #000; width: 50px; height: 50px; }
-            .card-img { filter: grayscale(100%); } /* Zdjęcia czarno-białe na druku */
+            .card { border-bottom: 1px solid #ccc; page-break-inside: avoid; background: none !important; display: flex; align-items: center; gap: 20px; padding: 10px 0; border: none; }
+            .cat-badge { position: static; border: 1px solid #000; color: #000; background: none; margin-left: auto; }
         }
     </style>
 </head>
@@ -88,31 +99,32 @@
             <h3 style="color:#fff; margin-top:0">Edytuj Sprzęt</h3>
             <form action="/edytuj" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="id" id="edit-id">
-                <label style="color:#aaa">Nazwa</label>
+                
+                <label style="color:#aaa; font-size:0.8rem">Nazwa</label>
                 <input type="text" name="nazwa" id="edit-nazwa" required>
-                <label style="color:#aaa">Opis</label>
+                
+                <label style="color:#aaa; font-size:0.8rem">Kategoria</label>
+                <select name="kategoria" id="edit-kategoria">
+                    <option value="Bron">Broń</option>
+                    <option value="Amunicja">Amunicja</option>
+                    <option value="Mundury">Mundury</option>
+                    <option value="Pojazdy">Pojazdy</option>
+                    <option value="Inne">Inne</option>
+                </select>
+
+                <label style="color:#aaa; font-size:0.8rem">Opis</label>
                 <input type="text" name="opis" id="edit-opis" required>
-                <label style="color:#aaa">Ilość</label>
+                
+                <label style="color:#aaa; font-size:0.8rem">Ilość</label>
                 <input type="number" name="ilosc" id="edit-ilosc" required>
                 
-                <label style="color:#aaa">Zmień zdjęcie (opcjonalne)</label>
                 <input type="file" name="zdjecie" accept="image/*">
 
-                <div class="modal-actions">
-                    <button type="button" onclick="closeModal('editModal')" style="padding:10px; background:#333; color:#fff; border:none; border-radius:8px; cursor:pointer;">Anuluj</button>
-                    <button type="submit" style="padding:10px; background:#3498db; color:#fff; border:none; border-radius:8px; cursor:pointer;">Zapisz</button>
+                <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:15px;">
+                    <button type="button" onclick="closeModal('editModal')" style="padding:10px; background:#333; color:#fff; border:none; border-radius:8px;">Anuluj</button>
+                    <button type="submit" style="padding:10px; background:#3498db; color:#fff; border:none; border-radius:8px;">Zapisz</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal" style="text-align:center">
-            <h3 style="color:#fff">Potwierdź usunięcie</h3>
-            <div class="modal-actions" style="justify-content:center">
-                <button onclick="closeModal('deleteModal')" style="padding:10px; background:#333; color:#fff; border:none; border-radius:8px; cursor:pointer;">Nie</button>
-                <form id="deleteForm" method="POST" style="margin:0"><button type="submit" style="padding:10px; background:#ff4757; color:#fff; border:none; border-radius:8px; cursor:pointer;">Tak, usuń</button></form>
-            </div>
         </div>
     </div>
 
@@ -121,36 +133,55 @@
         <a href="/" class="nav-item active"><i class="fa-solid fa-layer-group"></i> Magazyn</a>
         <a href="/historia" class="nav-item"><i class="fa-solid fa-list"></i> Logi</a>
         <div style="margin-top:auto">
-            <form action="/logout" method="POST"><button style="background:none; border:none; color:#ff4757; cursor:pointer; font-size:1rem;">Wyloguj</button></form>
+            <form action="/logout" method="POST"><button style="background:none; border:none; color:#ff4757; cursor:pointer;">Wyloguj</button></form>
         </div>
     </nav>
 
     <main class="main">
-        <header style="display:flex; justify-content:space-between; margin-bottom:40px;">
-            <h1 style="margin:0">Stan Magazynowy</h1>
-            <button onclick="window.print()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; padding:10px 20px; border-radius:20px; cursor:pointer;">🖨️ Drukuj</button>
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+            <div>
+                <h1 style="margin:0; font-size:1.5rem;">Stan Magazynowy</h1>
+                <p style="color:#94a3b8; margin:0; font-size:0.9rem">Zarządzanie zasobami</p>
+            </div>
+            <button onclick="window.print()" class="print-hide" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; padding:10px 15px; border-radius:15px; cursor:pointer;"><i class="fa-solid fa-print"></i></button>
         </header>
 
+        <div class="filter-bar print-hide">
+            <button class="filter-btn active" onclick="filterItems('all', this)">Wszystko</button>
+            <button class="filter-btn" onclick="filterItems('Bron', this)">Broń</button>
+            <button class="filter-btn" onclick="filterItems('Amunicja', this)">Amunicja</button>
+            <button class="filter-btn" onclick="filterItems('Mundury', this)">Mundury</button>
+            <button class="filter-btn" onclick="filterItems('Pojazdy', this)">Pojazdy</button>
+            <button class="filter-btn" onclick="filterItems('Inne', this)">Inne</button>
+        </div>
+
         <div class="grid">
-            <% arsenal.forEach(item => { %>
-                <div class="card">
+            <% arsenal.forEach(item => { 
+                // Zabezpieczenie dla starych przedmiotów bez kategorii
+                let kat = item.kategoria || 'Inne';
+            %>
+                <div class="card item-card" data-category="<%= kat %>">
+                    <div class="cat-badge cat-<%= kat %>"><%= kat %></div>
+
                     <div class="card-header">
                         <div class="img-container">
                             <% if(item.obrazek) { %>
                                 <img src="<%= item.obrazek %>" class="card-img" alt="foto">
                             <% } else { %>
-                                <i class="fa-solid fa-box-open card-icon"></i>
+                                <i class="fa-solid fa-box-open" style="color:#fff; font-size:1.5rem"></i>
                             <% } %>
                         </div>
                         
                         <div class="print-hide">
-                            <button onclick="openEdit('<%= item.id %>', '<%= item.nazwa %>', '<%= item.opis %>', '<%= item.ilosc %>')" style="background:none; border:none; color:#aaa; cursor:pointer;"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="confirmDelete('<%= item.id %>')" style="background:none; border:none; color:#aaa; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="openEdit('<%= item.id %>', '<%= item.nazwa %>', '<%= item.opis %>', '<%= item.ilosc %>', '<%= kat %>')" style="background:none; border:none; color:#aaa; cursor:pointer; margin-right:5px;"><i class="fa-solid fa-pen"></i></button>
+                            <form action="/usun/<%= item.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Na pewno usunąć?');">
+                                <button type="submit" style="background:none; border:none; color:#aaa; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+                            </form>
                         </div>
                     </div>
                     
-                    <h3><%= item.nazwa %></h3>
-                    <p><%= item.opis %></p>
+                    <h3 style="margin: 10px 0 5px;"><%= item.nazwa %></h3>
+                    <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:15px;"><%= item.opis %></p>
                     
                     <div class="controls">
                         <form action="/zmien/<%= item.id %>/minus" method="POST" style="margin:0"><button class="btn-action btn-minus">-</button></form>
@@ -162,15 +193,27 @@
         </div>
 
         <div class="add-panel print-hide">
-            <h3>📸 Dodaj sprzęt ze zdjęciem</h3>
+            <h3><i class="fa-solid fa-plus-circle"></i> Przyjmij na stan</h3>
             <form action="/dodaj" method="POST" enctype="multipart/form-data">
-                <div style="display:grid; grid-template-columns: 1fr 1fr 100px; gap:15px;">
-                    <input type="text" name="nazwa" placeholder="Nazwa" required autocomplete="off">
-                    <input type="text" name="opis" placeholder="Opis" required autocomplete="off">
-                    <input type="number" name="ilosc" placeholder="Ilość" required>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+                    <input type="text" name="nazwa" placeholder="Nazwa" required style="margin:0">
+                    
+                    <select name="kategoria" style="margin:0">
+                        <option value="Inne">Wybierz kategorię...</option>
+                        <option value="Bron">Broń</option>
+                        <option value="Amunicja">Amunicja</option>
+                        <option value="Mundury">Mundury</option>
+                        <option value="Pojazdy">Pojazdy</option>
+                    </select>
                 </div>
-                <input type="file" name="zdjecie" accept="image/*" style="margin-top:10px;">
-                <button type="submit" class="btn-submit" style="margin-top:10px;">Dodaj do bazy</button>
+                
+                <div style="display:grid; grid-template-columns: 1fr 100px; gap:15px; margin-bottom:15px;">
+                    <input type="text" name="opis" placeholder="Opis / Numer seryjny" required style="margin:0">
+                    <input type="number" name="ilosc" placeholder="Ilość" required style="margin:0">
+                </div>
+                
+                <input type="file" name="zdjecie" accept="image/*">
+                <button type="submit" class="btn-submit" style="margin-top:15px;">Zaksięguj</button>
             </form>
         </div>
     </main>
@@ -178,17 +221,31 @@
     <script>
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
         
-        function confirmDelete(id) {
-            document.getElementById('deleteForm').action = '/usun/' + id;
-            document.getElementById('deleteModal').classList.add('active');
-        }
-
-        function openEdit(id, nazwa, opis, ilosc) {
+        function openEdit(id, nazwa, opis, ilosc, kategoria) {
             document.getElementById('edit-id').value = id;
             document.getElementById('edit-nazwa').value = nazwa;
             document.getElementById('edit-opis').value = opis;
             document.getElementById('edit-ilosc').value = ilosc;
+            document.getElementById('edit-kategoria').value = kategoria; // Ustawienie kategorii
             document.getElementById('editModal').classList.add('active');
+        }
+
+        // LOGIKA FILTROWANIA
+        function filterItems(category, btn) {
+            // 1. Zmieniamy aktywny przycisk
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // 2. Ukrywamy/pokazujemy karty
+            const cards = document.querySelectorAll('.item-card');
+            cards.forEach(card => {
+                const itemCat = card.getAttribute('data-category');
+                if (category === 'all' || itemCat === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         }
         
         window.onclick = function(e) {

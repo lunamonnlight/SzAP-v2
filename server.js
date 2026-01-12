@@ -76,19 +76,17 @@ app.post('/dodaj', wymaganeLogowanie, upload.single('zdjecie'), (req, res) => {
     const nowySprzet = {
         id: Date.now(),
         nazwa: req.body.nazwa,
+        kategoria: req.body.kategoria || "Inne", // <--- NOWOŚĆ
         opis: req.body.opis,
         ilosc: parseInt(req.body.ilosc),
-        // Jeśli plik został przesłany, zapisujemy jego ścieżkę. Jeśli nie - null.
         obrazek: req.file ? '/uploads/' + req.file.filename : null 
     };
     
     arsenal.push(nowySprzet);
     zapiszPlik(DATA_FILE, arsenal);
-    logujAkcje("DOSTAWA", `Dodano: ${req.body.nazwa} (FOTO: ${req.file ? 'TAK' : 'NIE'})`);
+    logujAkcje("DOSTAWA", `Dodano: ${req.body.nazwa} [${nowySprzet.kategoria}]`);
     res.redirect('/');
 });
-
-// --- EDYCJA ZE ZDJĘCIEM ---
 app.post('/edytuj', wymaganeLogowanie, upload.single('zdjecie'), (req, res) => {
     let arsenal = wczytajPlik(DATA_FILE);
     const id = parseInt(req.body.id);
@@ -96,11 +94,10 @@ app.post('/edytuj', wymaganeLogowanie, upload.single('zdjecie'), (req, res) => {
 
     if (index !== -1) {
         arsenal[index].nazwa = req.body.nazwa;
+        arsenal[index].kategoria = req.body.kategoria; // <--- NOWOŚĆ
         arsenal[index].opis = req.body.opis;
         arsenal[index].ilosc = parseInt(req.body.ilosc);
         
-        // Jeśli użytkownik wgrał nowe zdjęcie, podmieniamy je. 
-        // Jeśli nie wgrał nic, zostawiamy stare.
         if (req.file) {
             arsenal[index].obrazek = '/uploads/' + req.file.filename;
         }
