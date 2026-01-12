@@ -25,7 +25,7 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 // Ważne: Udostępniamy folder uploads publicznie, żeby przeglądarka widziała zdjęcia
 app.use('/uploads', express.static('uploads')); 
-
+app.use(express.static('public'));
 app.use(session({
     secret: 'super_tajne_haslo_szap_v2',
     resave: false,
