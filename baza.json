@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "nazwa": "Karabinek Berylek",
+    "opis": "5.56mm NATO (Standard)",
+    "ilosc": 149
+  },
+  {
+    "id": 2,
+    "nazwa": "Granat F-1",
+    "opis": "Obronny, zapalnik UZRGM",
+    "ilosc": 29
+  },
+  {
+    "id": 3,
+    "nazwa": "Noktowizor PNL-3",
+    "opis": "Bielik / Generacja III",
+    "ilosc": 15
+  }
+]
