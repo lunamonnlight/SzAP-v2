@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "nazwa": "Mesko S.A.",
+    "adres": "ul. Legionów 122, Skarżysko-Kamienna",
+    "email": "biuro@mesko.com.pl",
+    "telefon": "+48 41 253 60 00"
+  },
+  {
+    "id": 2,
+    "nazwa": "Maskpol S.A.",
+    "adres": "Konieczki, 42-140 Panki",
+    "email": "handlowy@maskpol.com.pl",
+    "telefon": "+48 34 310 90 00"
+  }
+]
