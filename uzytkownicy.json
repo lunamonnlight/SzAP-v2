@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "login": "admin",
+    "haslo": "admin123",
+    "imie": "Piotr",
+    "nazwisko": "Szpilewski",
+    "rola": "Administrator",
+    "jednostka": "Sztab Generalny"
+  },
+  {
+    "id": 2,
+    "login": "logistyk",
+    "haslo": "logistyk123",
+    "imie": "Jan",
+    "nazwisko": "Kowalski",
+    "rola": "Logistyk",
+    "jednostka": "32 BLT Łask"
+  },
+  {
+    "id": 3,
+    "login": "dowodca",
+    "haslo": "dowodca123",
+    "imie": "Andrzej",
+    "nazwisko": "Nowak",
+    "rola": "Dowódca",
+    "jednostka": "3. Batalion"
+  }
+]

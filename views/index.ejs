@@ -207,11 +207,25 @@
     </div>
 
     <nav class="sidebar">
-        <div class="logo"><i class="fa-solid fa-shield-halved"></i> SYSTEM ARSENAŁ</div>
-        <a href="/" class="nav-item active"><i class="fa-solid fa-layer-group"></i> Magazyn</a>
-        <a href="/historia" class="nav-item"><i class="fa-solid fa-list"></i> Logi</a>
-        <div style="margin-top:auto"><form action="/logout" method="POST"><button style="background:none; border:none; color:#ff4757; cursor:pointer;">Wyloguj</button></form></div>
-    </nav>
+    <div class="logo"><i class="fa-solid fa-shield-halved"></i> SYSTEM ARSENAŁ</div>
+    <a href="/" class="nav-item"><i class="fa-solid fa-layer-group"></i> Magazyn</a>
+    
+    <% if(typeof user !== 'undefined' && user.rola === 'Administrator') { %>
+        <a href="/uzytkownicy" class="nav-item"><i class="fa-solid fa-users"></i> Użytkownicy</a>
+    <% } %>
+
+    <a href="/historia" class="nav-item"><i class="fa-solid fa-list"></i> Logi</a>
+    
+    <div style="margin-top:auto">
+        <% if(typeof user !== 'undefined') { %>
+            <div style="padding: 10px; font-size: 0.8rem; color: #64748b;">
+                <%= user.imie %> <%= user.nazwisko %> <br>
+                <span style="color:var(--accent)"><%= user.rola %></span>
+            </div>
+        <% } %>
+        <form action="/logout" method="POST"><button style="background:none; border:none; color:#ff4757; cursor:pointer;">Wyloguj</button></form>
+    </div>
+</nav>
 
     <main class="main">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
