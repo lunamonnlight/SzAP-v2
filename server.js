@@ -250,6 +250,54 @@ app.post('/zamowienia/nowe', wymaganeLogowanie, (req, res) => {
     res.redirect('/zamowienia');
 });
 
+// --- ODBIÓR DOSTAWY (PZ - Przyjęcie Zewnętrzne) ---
+app.post('/zamowienia/odbierz', wymaganeLogowanie, (req, res) => {
+    let zamowienia = wczytajPlik(ORDERS_FILE);
+    let arsenal = wczytajPlik(DATA_FILE);
+    const orderId = req.body.orderId;
+    
+    // 1. Znajdź zamówienie
+    const orderIndex = zamowienia.findIndex(z => z.id === orderId);
+    
+    if (orderIndex !== -1 && zamowienia[orderIndex].status !== "ZREALIZOWANO") {
+        const order = zamowienia[orderIndex];
+        let logSzczegoly = "";
+
+        // 2. Przelatujemy przez pozycje z zamówienia
+        order.pozycje.forEach((pozycja, index) => {
+            // Z formularza pobieramy FAKTYCZNĄ ilość (klucz to np. "ilosc_0", "ilosc_1")
+            const faktycznaIlosc = parseInt(req.body[`ilosc_${index}`]);
+            
+            // Szukamy tego przedmiotu w magazynie (po nazwie)
+            const itemIndex = arsenal.findIndex(i => i.nazwa === pozycja.nazwa);
+            
+            if (itemIndex !== -1) {
+                // 3. Aktualizujemy stan magazynowy
+                arsenal[itemIndex].ilosc += faktycznaIlosc;
+                
+                // Aktualizujemy też ostatnią znaną cenę zakupu (opcjonalne, ale przydatne)
+                if (pozycja.cena_jedn > 0) {
+                    arsenal[itemIndex].cena = pozycja.cena_jedn;
+                }
+
+                logSzczegoly += `${pozycja.nazwa}: +${faktycznaIlosc} szt. (Plan: ${pozycja.ilosc}), `;
+            }
+        });
+
+        // 4. Zamykamy zamówienie
+        zamowienia[orderIndex].status = "ZREALIZOWANO";
+        zamowienia[orderIndex].dataRealizacji = new Date().toLocaleDateString();
+
+        // 5. Zapisujemy wszystko
+        zapiszPlik(DATA_FILE, arsenal);
+        zapiszPlik(ORDERS_FILE, zamowienia);
+        
+        logujAkcje("DOSTAWA_PZ", `Przyjęto dostawę ${orderId}. ${logSzczegoly}`, req.session.user.login);
+    }
+
+    res.redirect('/zamowienia');
+});
+
 // --- STARE TRASY CRUD ---
 app.post('/dodaj', wymaganeLogowanie, upload.single('zdjecie'), (req, res) => {
     const arsenal = wczytajPlik(DATA_FILE);
