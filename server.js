@@ -112,7 +112,48 @@ app.get('/historia', wymaganeLogowanie, (req, res) => {
     let logi = fs.existsSync(LOGS_FILE) ? fs.readFileSync(LOGS_FILE, 'utf8').split('\n').filter(l => l).reverse() : [];
     res.render('historia', { logi: logi });
 });
+// --- STATYSTYKI I DASHBOARD (Zgodne z PU5) ---
+app.get('/statystyki', wymaganeLogowanie, (req, res) => {
+    const arsenal = wczytajPlik(DATA_FILE);
+    
+    // 1. Obliczenia ogólne
+    let calkowitaWartosc = 0;
+    let liczbaAlertow = 0;
+    let lacznaIlosc = 0;
+    
+    // 2. Dane do wykresów (Kategorie)
+    let kategorie = {}; // np. { 'Bron': 15, 'Mundury': 50 }
 
+    arsenal.forEach(item => {
+        // Sumowanie wartości (cena * ilość)
+        if(item.cena && item.ilosc) {
+            calkowitaWartosc += (item.cena * item.ilosc);
+        }
+        
+        // Zliczanie przedmiotów
+        lacznaIlosc += item.ilosc;
+
+        // Sprawdzanie alertów
+        if (item.min_ilosc && item.ilosc < item.min_ilosc) {
+            liczbaAlertow++;
+        }
+
+        // Grupowanie kategorii
+        const kat = item.kategoria || "Inne";
+        if (!kategorie[kat]) kategorie[kat] = 0;
+        kategorie[kat] += item.ilosc;
+    });
+
+    res.render('statystyki', { 
+        arsenal: arsenal,
+        stats: {
+            wartosc: calkowitaWartosc.toFixed(2),
+            alerty: liczbaAlertow,
+            ilosc: lacznaIlosc,
+            kategorie: kategorie
+        }
+    });
+});
 // 4. ZARZĄDZANIE UŻYTKOWNIKAMI (NOWOŚĆ - ZGODNIE Z DOKUMENTACJĄ)
 app.get('/uzytkownicy', wymaganeLogowanie, wymaganyAdmin, (req, res) => {
     const users = wczytajPlik(USERS_FILE);
