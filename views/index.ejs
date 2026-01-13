@@ -18,7 +18,7 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
     <style>
-        :root { --bg-color: #0f172a; --accent: #667eea; --glass: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.1); --text: #fff; --danger: #ef4444; }
+        :root { --bg-color: #0f172a; --accent: #667eea; --glass: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.1); --text: #fff; --danger: #ef4444; --warning: #f59e0b; }
         body { background: var(--bg-color); color: var(--text); font-family: 'Poppins', sans-serif; margin: 0; display: flex; min-height: 100vh; overflow-x: hidden; }
         
         .background-blobs { position: fixed; width: 100%; height: 100%; z-index: -1; }
@@ -33,15 +33,24 @@
 
         .main { flex: 1; padding: 50px; overflow-y: auto; width: 100%; }
         
+        /* FILTRY */
         .filter-bar { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #94a3b8; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
         .filter-btn:hover, .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; margin-bottom: 60px; }
+        /* KARTY */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; margin-bottom: 60px; }
         .card { background: var(--glass); backdrop-filter: blur(15px); border: 1px solid var(--border); border-radius: 24px; padding: 25px; transition: 0.3s; position: relative; }
         .card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.3); }
+        
+        /* ALERT NISKIEGO STANU */
+        .card.alert-low { border: 2px solid var(--danger); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+        .alert-badge { position: absolute; bottom: 80px; right: 20px; color: var(--danger); font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; animation: pulse 2s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
-        .img-container { width: 60px; height: 60px; border-radius: 16px; overflow: hidden; background: #000; border: 1px solid rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; }
+        .img-container { width: 70px; height: 70px; border-radius: 16px; overflow: hidden; background: #000; border: 1px solid rgba(255,255,255,0.2); display: flex; justify-content: center; align-items: center; }
         .card-img { width: 100%; height: 100%; object-fit: cover; }
         
         .cat-badge { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; font-weight: bold; padding: 4px 10px; border-radius: 8px; text-transform: uppercase; z-index: 10; white-space: nowrap; }
@@ -51,37 +60,36 @@
         .cat-Pojazdy { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
         .cat-Inne { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
 
+        .meta-info { font-size: 0.75rem; color: #64748b; margin-top: 5px; display: flex; flex-direction: column; gap: 2px; }
+        .meta-row { display: flex; align-items: center; gap: 6px; }
+
         .controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
         .btn-action { width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer; color: #fff; display: flex; align-items: center; justify-content: center; }
         .btn-minus { background: rgba(255,255,255,0.1); }
         .btn-plus { background: var(--accent); }
         .btn-issue { background: var(--danger); width: 100%; margin-top: 10px; padding: 8px; border-radius: 10px; border: none; color: #fff; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
-        .btn-issue:hover { background: #d32f2f; }
-
-        .add-panel { background: var(--glass); padding: 40px; border-radius: 30px; border: 1px solid var(--border); }
+        
+        .add-panel { background: var(--glass); padding: 40px; border-radius: 30px; border: 1px solid var(--border); margin-top: 40px; }
         input, select { background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 15px; border-radius: 12px; color: #fff; width: 100%; box-sizing: border-box; margin-bottom: 15px; }
         .btn-submit { background: var(--accent); border: none; color: #fff; padding: 15px 30px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; }
 
         /* MODALE */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(5px); }
         .modal-overlay.active { display: flex; }
-        .modal { background: #1e293b; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; border: 1px solid #333; }
+        .modal { background: #1e293b; padding: 30px; border-radius: 20px; width: 90%; max-width: 500px; border: 1px solid #333; max-height: 90vh; overflow-y: auto; }
         
         /* SKANER */
         #reader { width: 100%; border-radius: 15px; overflow: hidden; border: 2px solid var(--accent); }
-        #reader video { object-fit: cover; border-radius: 15px; }
 
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .main { padding: 20px; }
             .grid { grid-template-columns: 1fr; }
             .filter-bar { overflow-x: auto; padding-bottom: 10px; flex-wrap: nowrap; }
-            .filter-btn { white-space: nowrap; }
         }
 
         /* DRUKOWANIE */
         @media print {
-            @page { margin: 1cm; }
             body { background: #fff !important; color: #000 !important; display: block; font-family: 'Times New Roman', serif; }
             .sidebar, .add-panel, .controls, .filter-bar, .print-hide, .background-blobs { display: none !important; }
             
@@ -89,14 +97,8 @@
             body:not(.printing-label) .grid { display: table; width: 100%; border-collapse: collapse; margin-top: 10px; }
             body:not(.printing-label) .card { display: table-row; border-bottom: 1px solid #000; background: none !important; box-shadow: none !important; page-break-inside: avoid; }
             body:not(.printing-label) .card-header, body:not(.printing-label) h3, body:not(.printing-label) p { display: table-cell; padding: 10px; border-bottom: 1px solid #ccc; vertical-align: middle; }
-            body:not(.printing-label) .card-header { width: 50px; }
-            body:not(.printing-label) h3 { width: 30%; font-weight: bold; font-size: 12pt; }
-            body:not(.printing-label) p { width: 40%; font-size: 10pt; color: #444; }
-            body:not(.printing-label) .card::after { content: "Stan: " attr(data-qty) " szt."; display: table-cell; padding: 10px; border-bottom: 1px solid #ccc; text-align: right; font-weight: bold; white-space: nowrap; vertical-align: middle; }
-            body:not(.printing-label) .img-container { border: none; width: 40px; height: 40px; }
-            body:not(.printing-label) .img-container i { color: #000 !important; }
-            body:not(.printing-label) .cat-badge { display: none; }
-
+            body:not(.printing-label) .meta-info { display: table-cell; font-size: 9pt; }
+            
             body.printing-label #print-header, body.printing-label .main, body.printing-label header, body.printing-label .grid { display: none !important; }
             body.printing-label #qrModal { display: flex !important; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: white !important; align-items: center; justify-content: center; border: none; z-index: 9999; }
             body.printing-label .modal { border: 4px solid #000; box-shadow: none; width: 300px; height: auto; padding: 20px; background: #fff !important; }
@@ -113,7 +115,7 @@
             <div style="text-align:left;"><h1 style="margin:0; font-size:18pt; text-transform:uppercase;">Raport Stanu Magazynowego</h1><p style="margin:0; font-size:10pt;">Ministerstwo Obrony • Departament Logistyki</p></div>
             <div class="stamp">ŚCIŚLE TAJNE</div>
         </div>
-        <p style="text-align:right; font-size:9pt; margin-top:10px;">Data generowania: <span id="print-date"></span></p>
+        <p style="text-align:right; font-size:9pt; margin-top:10px;">Data: <span id="print-date"></span></p>
     </div>
 
     <div class="modal-overlay" id="editModal">
@@ -121,10 +123,25 @@
             <h3 style="color:#fff; margin-top:0">Edytuj Sprzęt</h3>
             <form action="/edytuj" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="id" id="edit-id">
-                <label style="color:#aaa; font-size:0.8rem">Nazwa</label><input type="text" name="nazwa" id="edit-nazwa" required>
-                <label style="color:#aaa; font-size:0.8rem">Kategoria</label><select name="kategoria" id="edit-kategoria"><option value="Bron">Broń</option><option value="Amunicja">Amunicja</option><option value="Mundury">Mundury</option><option value="Pojazdy">Pojazdy</option><option value="Inne">Inne</option></select>
+                
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
+                    <div><label style="color:#aaa; font-size:0.8rem">Nazwa</label><input type="text" name="nazwa" id="edit-nazwa" required></div>
+                    <div><label style="color:#aaa; font-size:0.8rem">Kod NATO</label><input type="text" name="kod" id="edit-kod"></div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div><label style="color:#aaa; font-size:0.8rem">Kategoria</label><select name="kategoria" id="edit-kategoria"><option value="Bron">Broń</option><option value="Amunicja">Amunicja</option><option value="Mundury">Mundury</option><option value="Pojazdy">Pojazdy</option><option value="Inne">Inne</option></select></div>
+                    <div><label style="color:#aaa; font-size:0.8rem">Magazyn</label><input type="text" name="magazyn" id="edit-magazyn"></div>
+                </div>
+
                 <label style="color:#aaa; font-size:0.8rem">Opis</label><input type="text" name="opis" id="edit-opis" required>
-                <label style="color:#aaa; font-size:0.8rem">Ilość</label><input type="number" name="ilosc" id="edit-ilosc" required>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                    <div><label style="color:#aaa; font-size:0.8rem">Ilość</label><input type="number" name="ilosc" id="edit-ilosc" required></div>
+                    <div><label style="color:#aaa; font-size:0.8rem; color:#ef4444;">Min. Stan</label><input type="number" name="min_ilosc" id="edit-min_ilosc" style="border-color:#ef4444;"></div>
+                    <div><label style="color:#aaa; font-size:0.8rem">Cena (PLN)</label><input type="number" step="0.01" name="cena" id="edit-cena"></div>
+                </div>
+
                 <input type="file" name="zdjecie" accept="image/*">
                 <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:15px;">
                     <button type="button" onclick="closeModal('editModal')" style="padding:10px; background:#333; color:#fff; border:none; border-radius:8px;">Anuluj</button>
@@ -138,22 +155,14 @@
         <div class="modal" style="border: 1px solid #ef4444;">
             <h3 style="color:#fff; margin-top:0"><i class="fa-solid fa-hand-holding-box"></i> Protokół Wydania</h3>
             <p id="issue-item-name" style="color:var(--accent); font-weight:bold; margin-bottom:20px;"></p>
-            
             <form action="/wydaj" method="POST">
                 <input type="hidden" name="id" id="issue-id">
-                
-                <label style="color:#aaa; font-size:0.8rem">Ilość do wydania</label>
-                <input type="number" name="ilosc" id="issue-ilosc" value="1" min="1" required style="border-color: #ef4444;">
-                
-                <label style="color:#aaa; font-size:0.8rem">Odbiorca (Kto?)</label>
-                <input type="text" name="odbiorca" placeholder="np. Kpr. Jan Kowalski" required>
-                
-                <label style="color:#aaa; font-size:0.8rem">Cel / Przeznaczenie</label>
-                <input type="text" name="cel" placeholder="np. Patrol, Ćwiczenia, Naprawa" required>
-
+                <label style="color:#aaa; font-size:0.8rem">Ilość do wydania</label><input type="number" name="ilosc" id="issue-ilosc" value="1" min="1" required style="border-color: #ef4444;">
+                <label style="color:#aaa; font-size:0.8rem">Odbiorca</label><input type="text" name="odbiorca" placeholder="np. Kpr. Jan Kowalski" required>
+                <label style="color:#aaa; font-size:0.8rem">Cel</label><input type="text" name="cel" placeholder="np. Patrol" required>
                 <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:15px;">
                     <button type="button" onclick="closeModal('issueModal')" style="padding:10px; background:#333; color:#fff; border:none; border-radius:8px;">Anuluj</button>
-                    <button type="submit" style="padding:10px; background:#ef4444; color:#fff; border:none; border-radius:8px; font-weight:bold;">Zatwierdź Wydanie</button>
+                    <button type="submit" style="padding:10px; background:#ef4444; color:#fff; border:none; border-radius:8px; font-weight:bold;">Wydaj</button>
                 </div>
             </form>
         </div>
@@ -167,16 +176,15 @@
             <p id="qr-id" style="color:#000; font-family:'Courier New', monospace; margin:5px 0 20px; font-weight:bold;"></p>
             <div class="modal-actions" style="justify-content:center">
                 <button type="button" onclick="closeQR()" style="padding:10px 20px; background:#333; color:#fff; border:none; border-radius:8px; cursor:pointer;">Zamknij</button>
-                <button type="button" onclick="window.print()" style="padding:10px 20px; background:#000; color:#fff; border:none; border-radius:8px; cursor:pointer; margin-left:10px;"><i class="fa-solid fa-print"></i> Drukuj Etykietę</button>
+                <button type="button" onclick="window.print()" style="padding:10px 20px; background:#000; color:#fff; border:none; border-radius:8px; cursor:pointer; margin-left:10px;"><i class="fa-solid fa-print"></i> Drukuj</button>
             </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="scannerModal">
         <div class="modal" style="text-align:center;">
-            <h3 style="color:#fff; margin-top:0"><i class="fa-solid fa-camera"></i> Zeskanuj Kod</h3>
+            <h3 style="color:#fff; margin-top:0"><i class="fa-solid fa-camera"></i> Skaner</h3>
             <div id="reader"></div>
-            <p id="scan-status" style="color:#aaa; font-size:0.8rem; margin-top:10px;">Nakieruj kamerę na kod QR...</p>
             <button type="button" onclick="stopScanner()" style="margin-top:20px; padding:10px 20px; background:#ff4757; color:#fff; border:none; border-radius:8px; cursor:pointer;">Anuluj</button>
         </div>
     </div>
@@ -207,30 +215,46 @@
         </div>
 
         <div class="grid">
-            <% arsenal.forEach(item => { let kat = item.kategoria || 'Inne'; %>
-                <div class="card item-card" id="card-<%= item.id %>" data-category="<%= kat %>" data-qty="<%= item.ilosc %>">
+            <% arsenal.forEach(item => { 
+                let kat = item.kategoria || 'Inne';
+                // LOGIKA ALERTU: Czy ilość < min_ilosc?
+                let isLow = (item.min_ilosc && item.ilosc < item.min_ilosc);
+            %>
+                <div class="card item-card <%= isLow ? 'alert-low' : '' %>" id="card-<%= item.id %>" data-category="<%= kat %>" data-qty="<%= item.ilosc %>">
                     <div class="cat-badge cat-<%= kat %>"><%= kat %></div>
+                    
                     <div class="card-header">
                         <div class="img-container">
                             <% if(item.obrazek) { %> <img src="<%= item.obrazek %>" class="card-img" alt="foto"> <% } else { %> <i class="fa-solid fa-box-open" style="color:#fff; font-size:1.5rem"></i> <% } %>
                         </div>
                         <div class="print-hide">
-                            <button onclick="openEdit('<%= item.id %>', '<%= item.nazwa %>', '<%= item.opis %>', '<%= item.ilosc %>', '<%= kat %>')" style="background:none; border:none; color:#aaa; cursor:pointer;"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="openEdit('<%= item.id %>', '<%= item.nazwa %>', '<%= item.opis %>', '<%= item.ilosc %>', '<%= kat %>', '<%= item.magazyn || '' %>', '<%= item.kod || '' %>', '<%= item.min_ilosc || 0 %>', '<%= item.cena || 0 %>')" style="background:none; border:none; color:#aaa; cursor:pointer;"><i class="fa-solid fa-pen"></i></button>
                             <form action="/usun/<%= item.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Usunąć?');"><button type="submit" style="background:none; border:none; color:#aaa; cursor:pointer;"><i class="fa-solid fa-trash"></i></button></form>
-                            <button onclick="showQR('<%= item.id %>', '<%= item.nazwa %>')" style="background:none; border:none; color:#aaa; cursor:pointer; margin-left:5px;" title="Generuj QR"><i class="fa-solid fa-qrcode"></i></button>
+                            <button onclick="showQR('<%= item.id %>', '<%= item.nazwa %>')" style="background:none; border:none; color:#aaa; cursor:pointer; margin-left:5px;"><i class="fa-solid fa-qrcode"></i></button>
                         </div>
                     </div>
+                    
                     <h3 style="margin: 10px 0 5px;"><%= item.nazwa %></h3>
-                    <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:15px;"><%= item.opis %></p>
+                    
+                    <div class="meta-info">
+                        <div class="meta-row"><i class="fa-solid fa-warehouse" style="color:#667eea; width:15px;"></i> <%= item.magazyn || 'Brak' %></div>
+                        <div class="meta-row"><i class="fa-solid fa-barcode" style="color:#64748b; width:15px;"></i> <%= item.kod || '---' %></div>
+                        <% if(item.cena) { %> <div class="meta-row"><i class="fa-solid fa-coins" style="color:#f59e0b; width:15px;"></i> <%= item.cena %> PLN</div> <% } %>
+                    </div>
+
+                    <p style="font-size:0.85rem; color:#94a3b8; margin:10px 0;"><%= item.opis %></p>
+                    
+                    <% if(isLow) { %>
+                        <div class="alert-badge"><i class="fa-solid fa-triangle-exclamation"></i> NISKI STAN!</div>
+                    <% } %>
+
                     <div class="controls print-hide" style="flex-wrap:wrap;">
                         <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
                             <form action="/zmien/<%= item.id %>/minus" method="POST" style="margin:0"><button class="btn-action btn-minus">-</button></form>
                             <span style="font-weight:bold; font-size:1.2rem;"><%= item.ilosc %></span>
                             <form action="/zmien/<%= item.id %>/plus" method="POST" style="margin:0"><button class="btn-action btn-plus">+</button></form>
                         </div>
-                        <button onclick="openIssue('<%= item.id %>', '<%= item.nazwa %>', '<%= item.ilosc %>')" class="btn-issue">
-                            <i class="fa-solid fa-hand-holding"></i> WYDAJ SPRZĘT
-                        </button>
+                        <button onclick="openIssue('<%= item.id %>', '<%= item.nazwa %>', '<%= item.ilosc %>')" class="btn-issue"><i class="fa-solid fa-hand-holding"></i> WYDAJ</button>
                     </div>
                 </div>
             <% }) %>
@@ -239,14 +263,23 @@
         <div class="add-panel print-hide">
             <h3><i class="fa-solid fa-plus-circle"></i> Przyjmij na stan</h3>
             <form action="/dodaj" method="POST" enctype="multipart/form-data">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:10px;">
                     <input type="text" name="nazwa" placeholder="Nazwa" required style="margin:0">
-                    <select name="kategoria" style="margin:0"><option value="Inne">Wybierz kategorię...</option><option value="Bron">Broń</option><option value="Amunicja">Amunicja</option><option value="Mundury">Mundury</option><option value="Pojazdy">Pojazdy</option></select>
+                    <input type="text" name="kod" placeholder="Kod NATO" style="margin:0">
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 100px; gap:15px; margin-bottom:15px;">
-                    <input type="text" name="opis" placeholder="Opis" required style="margin:0">
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <select name="kategoria" style="margin:0"><option value="Inne">Kategoria...</option><option value="Bron">Broń</option><option value="Amunicja">Amunicja</option><option value="Mundury">Mundury</option><option value="Pojazdy">Pojazdy</option></select>
+                    <input type="text" name="magazyn" placeholder="Magazyn (np. Rzeszów)" style="margin:0">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
                     <input type="number" name="ilosc" placeholder="Ilość" required style="margin:0">
+                    <input type="number" name="min_ilosc" placeholder="Min. Stan" style="margin:0; border-color:#ef4444;">
+                    <input type="number" step="0.01" name="cena" placeholder="Cena (PLN)" style="margin:0;">
                 </div>
+
+                <input type="text" name="opis" placeholder="Opis" required style="margin-bottom:10px;">
                 <input type="file" name="zdjecie" accept="image/*">
                 <button type="submit" class="btn-submit" style="margin-top:15px;">Zaksięguj</button>
             </form>
@@ -255,20 +288,26 @@
 
     <script>
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        function openEdit(id, nazwa, opis, ilosc, kategoria) {
+        
+        function openEdit(id, nazwa, opis, ilosc, kat, mag, kod, min, cena) {
             document.getElementById('edit-id').value = id;
             document.getElementById('edit-nazwa').value = nazwa;
             document.getElementById('edit-opis').value = opis;
             document.getElementById('edit-ilosc').value = ilosc;
-            document.getElementById('edit-kategoria').value = kategoria;
+            document.getElementById('edit-kategoria').value = kat;
+            
+            // Nowe pola
+            document.getElementById('edit-magazyn').value = mag;
+            document.getElementById('edit-kod').value = kod;
+            document.getElementById('edit-min_ilosc').value = min;
+            document.getElementById('edit-cena').value = cena;
+
             document.getElementById('editModal').classList.add('active');
         }
         
-        // --- LOGIKA WYDAWANIA ---
         function openIssue(id, nazwa, maxIlosc) {
             document.getElementById('issue-id').value = id;
             document.getElementById('issue-item-name').innerText = "Wydajesz: " + nazwa;
-            // Zabezpieczenie: nie można wydać więcej niż mamy
             const input = document.getElementById('issue-ilosc');
             input.max = maxIlosc;
             input.value = 1; 
@@ -318,10 +357,10 @@
                         filterItems('all', null);
                         document.querySelectorAll('.item-card').forEach(c => c.style.display = 'none');
                         karta.style.display = 'block';
-                        karta.style.border = "2px solid #ef4444";
+                        karta.style.border = "4px solid #00ff00"; // Znaleziono!
                         karta.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } else { alert("Nie znaleziono: " + id); }
-                } else { alert("To nie jest kod systemu Arsenał!"); }
+                    } else { alert("Nie znaleziono ID: " + id); }
+                } else { alert("Błędny kod!"); }
             });
         }
         function stopScanner() {
