@@ -45,8 +45,25 @@
         
         /* ALERT NISKIEGO STANU */
         .card.alert-low { border: 2px solid var(--danger); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
-        .alert-badge { position: absolute; bottom: 80px; right: 20px; color: var(--danger); font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; animation: pulse 2s infinite; }
-        
+        /* POPRAWIONY ALERT - Pasek zamiast lewitującego napisu */
+.alert-badge { 
+    margin: 10px 0;                 /* Odstęp góra/dół */
+    color: var(--danger); 
+    font-weight: bold; 
+    font-size: 0.85rem; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;        /* Wyśrodkowanie */
+    gap: 8px; 
+    animation: pulse 2s infinite;
+    
+    /* Dodatki wizualne */
+    background: rgba(239, 68, 68, 0.1); /* Lekko czerwone tło */
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 8px;
+    border-radius: 8px;
+}
+
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
