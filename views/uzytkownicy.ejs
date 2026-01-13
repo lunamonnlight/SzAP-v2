@@ -127,6 +127,26 @@
                 </tbody>
             </table>
         </div>
+        <div style="margin-top: 60px; border-top: 1px solid var(--border); padding-top: 40px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h2 style="margin:0; color:#fff;"><i class="fa-solid fa-server"></i> Strefa Techniczna</h2>
+                    <p style="color:#94a3b8; margin:5px 0 0;">Zarządzanie bezpieczeństwem danych i kopiami zapasowymi (SYS-UC14)</p>
+                </div>
+                
+                <form action="/admin/backup" method="POST">
+                    <button type="submit" style="background: #6366f1; color: #fff; border: none; padding: 15px 30px; border-radius: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 1rem; transition: 0.3s;">
+                        <i class="fa-solid fa-database"></i> WYKONAJ PEŁNY BACKUP
+                    </button>
+                </form>
+            </div>
+
+            <div style="margin-top: 20px; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; border: 1px dashed #64748b; color: #94a3b8; font-family: monospace;">
+                STATUS SYSTEMU: ONLINE<br>
+                LOKALIZACJA KOPII: /backups/<br>
+                RETENCJA DANYCH: 30 DNI
+            </div>
+        </div>
     </main>
 
     <div class="modal-overlay" id="addModal">

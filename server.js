@@ -153,6 +153,34 @@ app.post('/uzytkownicy/usun/:id', wymaganeLogowanie, wymaganyAdmin, (req, res) =
     res.redirect('/uzytkownicy');
 });
 
+// --- BACKUP SYSTEMU (Zgodne z SYS-UC14) ---
+app.post('/admin/backup', wymaganeLogowanie, wymaganyAdmin, (req, res) => {
+    // 1. Tworzymy folder backups jeśli nie istnieje
+    const backupDir = path.join(__dirname, 'backups');
+    if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir);
+    }
+
+    // 2. Generujemy unikalną nazwę z datą (np. 2025-01-13-12-00-00)
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    
+    try {
+        // 3. Kopiujemy kluczowe pliki
+        if (fs.existsSync(DATA_FILE)) fs.copyFileSync(DATA_FILE, path.join(backupDir, `baza-${timestamp}.json`));
+        if (fs.existsSync(USERS_FILE)) fs.copyFileSync(USERS_FILE, path.join(backupDir, `uzytkownicy-${timestamp}.json`));
+        if (fs.existsSync(LOGS_FILE)) fs.copyFileSync(LOGS_FILE, path.join(backupDir, `logi-${timestamp}.txt`));
+
+        logujAkcje("BACKUP", `Wykonano pełny backup systemu: backup-${timestamp}`, req.session.user.login);
+        console.log("Backup wykonany!");
+    } catch (err) {
+        console.error("Błąd backupu:", err);
+        logujAkcje("BŁĄD", `Nieudany backup: ${err.message}`, req.session.user.login);
+    }
+    
+    // Wracamy do panelu
+    res.redirect('/uzytkownicy');
+});
+
 // --- OBSŁUGA SPRZĘTU (BEZ ZMIAN W LOGICE, ALE Z LOGOWANIEM UŻYTKOWNIKA) ---
 
 app.post('/dodaj', wymaganeLogowanie, upload.single('zdjecie'), (req, res) => {
