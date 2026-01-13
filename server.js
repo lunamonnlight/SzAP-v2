@@ -1,92 +1,153 @@
 const express = require('express');
+const app = express();
 const session = require('express-session');
 const fs = require('fs');
-const multer = require('multer'); // <--- NOWOŚĆ
-const path = require('path');     // <--- Do obsługi ścieżek plików
-const app = express();
+const path = require('path');
+const multer = require('multer');
+
+// PORT (Dla Rendera i lokalnie)
 const PORT = process.env.PORT || 3000;
 
-const DATA_FILE = 'baza.json';
-const LOG_FILE = 'historia.json';
+// Konfiguracja EJS i folderów
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
+app.use(express.urlencoded({ extended: true }));
 
-// --- KONFIGURACJA PRZESYŁANIA ZDJĘĆ ---
+// Konfiguracja Sesji (Logowanie)
+app.use(session({
+    secret: 'tajnehaslo123',
+    resave: false,
+    saveUninitialized: true
+}));
+
+// Konfiguracja Multer (Zdjęcia)
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/') // Gdzie zapisać
+        // Upewnij się, że folder istnieje
+        if (!fs.existsSync('uploads')) {
+            fs.mkdirSync('uploads');
+        }
+        cb(null, 'uploads/');
     },
     filename: function (req, file, cb) {
-        // Generujemy unikalną nazwę: data + oryginalna nazwa (np. 170988_czolg.jpg)
-        cb(null, Date.now() + path.extname(file.originalname)); 
+        cb(null, Date.now() + '-' + file.originalname);
     }
 });
 const upload = multer({ storage: storage });
 
-app.set('view engine', 'ejs');
-app.use(express.urlencoded({ extended: true }));
-// Ważne: Udostępniamy folder uploads publicznie, żeby przeglądarka widziała zdjęcia
-app.use('/uploads', express.static('uploads')); 
-app.use(express.static('public'));
-app.use(session({
-    secret: 'super_tajne_haslo_szap_v2',
-    resave: false,
-    saveUninitialized: false
-}));
-
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "1234";
+// Pliki danych
+const DATA_FILE = 'baza.json';
+const LOGS_FILE = 'logi.txt';
 
 // --- FUNKCJE POMOCNICZE ---
-function wczytajPlik(plik) {
-    try { return JSON.parse(fs.readFileSync(plik, 'utf8')); } catch (e) { return []; }
+
+function wczytajPlik(sciezka) {
+    if (!fs.existsSync(sciezka)) return [];
+    const data = fs.readFileSync(sciezka);
+    if (!data.toString()) return []; // Pusty plik
+    return JSON.parse(data);
 }
-function zapiszPlik(plik, dane) {
-    fs.writeFileSync(plik, JSON.stringify(dane, null, 2), 'utf8');
+
+function zapiszPlik(sciezka, dane) {
+    fs.writeFileSync(sciezka, JSON.stringify(dane, null, 2));
 }
-function logujAkcje(typ, opis) {
-    const logi = wczytajPlik(LOG_FILE);
-    logi.unshift({ data: new Date().toLocaleString(), typ: typ, opis: opis });
-    zapiszPlik(LOG_FILE, logi);
+
+function logujAkcje(akcja, opis) {
+    const data = new Date().toLocaleString();
+    const wpis = `[${data}] [${akcja}] ${opis}\n`;
+    fs.appendFileSync(LOGS_FILE, wpis);
 }
+
+// Middleware: Sprawdzanie czy zalogowany
 function wymaganeLogowanie(req, res, next) {
-    if (req.session.zalogowany) next(); else res.redirect('/login');
+    if (req.session.zalogowany) {
+        next();
+    } else {
+        res.redirect('/login');
+    }
 }
 
-// --- ROUTE'Y ---
+// --- TRASY (ROUTES) ---
 
-app.get('/login', (req, res) => res.render('login', { error: null }));
+// 1. Ekran Logowania
+app.get('/login', (req, res) => {
+    res.render('login', { error: null });
+});
+
 app.post('/login', (req, res) => {
-    if (req.body.login === ADMIN_USER && req.body.haslo === ADMIN_PASS) {
-        req.session.zalogowany = true; res.redirect('/');
-    } else res.render('login', { error: "Błąd!" });
+    const haslo = req.body.haslo;
+    if (haslo === 'wojsko123') { // Tu wpisz swoje hasło
+        req.session.zalogowany = true;
+        res.redirect('/');
+    } else {
+        res.render('login', { error: 'Nieprawidłowe hasło!' });
+    }
 });
-app.post('/logout', (req, res) => req.session.destroy(() => res.redirect('/login')));
 
+app.post('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/login');
+});
+
+// 2. Strona Główna (Magazyn)
 app.get('/', wymaganeLogowanie, (req, res) => {
-    res.render('index', { arsenal: wczytajPlik(DATA_FILE) });
-});
-app.get('/historia', wymaganeLogowanie, (req, res) => {
-    res.render('historia', { logi: wczytajPlik(LOG_FILE) });
+    const arsenal = wczytajPlik(DATA_FILE);
+    res.render('index', { arsenal: arsenal });
 });
 
-// --- DODAWANIE ZE ZDJĘCIEM ---
-// 'upload.single("zdjecie")' oznacza, że czekamy na jeden plik z pola o nazwie "zdjecie"
+// 3. Dodawanie Sprzętu (z kategorią)
 app.post('/dodaj', wymaganeLogowanie, upload.single('zdjecie'), (req, res) => {
     const arsenal = wczytajPlik(DATA_FILE);
-    
     const nowySprzet = {
         id: Date.now(),
         nazwa: req.body.nazwa,
-        kategoria: req.body.kategoria || "Inne", // <--- NOWOŚĆ
+        kategoria: req.body.kategoria || "Inne",
         opis: req.body.opis,
         ilosc: parseInt(req.body.ilosc),
         obrazek: req.file ? '/uploads/' + req.file.filename : null 
     };
-    
     arsenal.push(nowySprzet);
     zapiszPlik(DATA_FILE, arsenal);
     logujAkcje("DOSTAWA", `Dodano: ${req.body.nazwa} [${nowySprzet.kategoria}]`);
     res.redirect('/');
 });
+
+// 4. Usuwanie
+app.post('/usun/:id', wymaganeLogowanie, (req, res) => {
+    let arsenal = wczytajPlik(DATA_FILE);
+    const id = parseInt(req.params.id);
+    const usuniety = arsenal.find(item => item.id === id);
+    
+    arsenal = arsenal.filter(item => item.id !== id);
+    zapiszPlik(DATA_FILE, arsenal);
+    
+    if(usuniety) logujAkcje("USUNIĘCIE", `Usunięto: ${usuniety.nazwa}`);
+    res.redirect('/');
+});
+
+// 5. Zmiana Ilości (+/-)
+app.post('/zmien/:id/:akcja', wymaganeLogowanie, (req, res) => {
+    let arsenal = wczytajPlik(DATA_FILE);
+    const id = parseInt(req.params.id);
+    const akcja = req.params.akcja;
+    
+    const index = arsenal.findIndex(item => item.id === id);
+    if (index !== -1) {
+        if (akcja === 'plus') {
+            arsenal[index].ilosc++;
+            logujAkcje("KOREKTA", `Zwiększono stan: ${arsenal[index].nazwa}`);
+        } else if (akcja === 'minus' && arsenal[index].ilosc > 0) {
+            arsenal[index].ilosc--;
+            logujAkcje("KOREKTA", `Zmniejszono stan: ${arsenal[index].nazwa}`);
+        }
+        zapiszPlik(DATA_FILE, arsenal);
+    }
+    res.redirect('/');
+});
+
+// 6. Edycja (z kategorią)
 app.post('/edytuj', wymaganeLogowanie, upload.single('zdjecie'), (req, res) => {
     let arsenal = wczytajPlik(DATA_FILE);
     const id = parseInt(req.body.id);
@@ -94,7 +155,7 @@ app.post('/edytuj', wymaganeLogowanie, upload.single('zdjecie'), (req, res) => {
 
     if (index !== -1) {
         arsenal[index].nazwa = req.body.nazwa;
-        arsenal[index].kategoria = req.body.kategoria; // <--- NOWOŚĆ
+        arsenal[index].kategoria = req.body.kategoria;
         arsenal[index].opis = req.body.opis;
         arsenal[index].ilosc = parseInt(req.body.ilosc);
         
@@ -103,32 +164,12 @@ app.post('/edytuj', wymaganeLogowanie, upload.single('zdjecie'), (req, res) => {
         }
 
         zapiszPlik(DATA_FILE, arsenal);
-        logujAkcje("KOREKTA", `Edycja wpisu: ${req.body.nazwa}`);
+        logujAkcje("EDYCJA", `Zaktualizowano: ${req.body.nazwa}`);
     }
     res.redirect('/');
 });
 
-// Pozostałe funkcje bez zmian
-app.post('/usun/:id', wymaganeLogowanie, (req, res) => {
-    let arsenal = wczytajPlik(DATA_FILE);
-    const id = parseInt(req.params.id);
-    arsenal = arsenal.filter(item => item.id !== id);
-    zapiszPlik(DATA_FILE, arsenal);
-    logujAkcje("LIKWIDACJA", `Usunięto ID: ${id}`);
-    res.redirect('/');
-});
-
-app.post('/zmien/:id/:akcja', wymaganeLogowanie, (req, res) => {
-    let arsenal = wczytajPlik(DATA_FILE);
-    const item = arsenal.find(i => i.id === parseInt(req.params.id));
-    if (item) {
-        if (req.params.akcja === 'plus') item.ilosc++;
-        else if (req.params.akcja === 'minus' && item.ilosc > 0) item.ilosc--;
-        zapiszPlik(DATA_FILE, arsenal);
-    }
-    res.redirect('/');
-});
- // --- NOWOŚĆ: WYDAWANIE SPRZĘTU ---
+// 7. Wydawanie Sprzętu (NOWOŚĆ)
 app.post('/wydaj', wymaganeLogowanie, (req, res) => {
     let arsenal = wczytajPlik(DATA_FILE);
     const id = parseInt(req.body.id);
@@ -139,19 +180,28 @@ app.post('/wydaj', wymaganeLogowanie, (req, res) => {
     const index = arsenal.findIndex(item => item.id === id);
 
     if (index !== -1) {
-        // Sprawdzamy, czy mamy tyle na stanie
         if (arsenal[index].ilosc >= iloscDoWydania) {
             arsenal[index].ilosc -= iloscDoWydania;
             zapiszPlik(DATA_FILE, arsenal);
-            
-            // Logujemy szczegółowo kto i po co
             logujAkcje("WYDANIE", `Wydano: ${iloscDoWydania}szt. ${arsenal[index].nazwa} | Odbiorca: ${odbiorca} | Cel: ${cel}`);
         } else {
-            // Tu można by dodać obsługę błędu, ale na razie po prostu nie wydamy
             console.log("BRAK TOWARU NA STANIE!"); 
         }
     }
     res.redirect('/');
-});]
+});
 
-app.listen(PORT, () => console.log(`📸 SzAP v2 z Obsługą FOTO działa na porcie ${PORT}`));
+// 8. Strona Historii (Logi)
+app.get('/historia', wymaganeLogowanie, (req, res) => {
+    let logi = [];
+    if (fs.existsSync(LOGS_FILE)) {
+        const data = fs.readFileSync(LOGS_FILE, 'utf8');
+        logi = data.split('\n').filter(line => line.length > 0).reverse();
+    }
+    res.render('historia', { logi: logi });
+});
+
+// START SERWERA
+app.listen(PORT, () => {
+    console.log(`Serwer działa na porcie ${PORT}`);
+});
