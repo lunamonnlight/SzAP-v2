@@ -2,147 +2,107 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Rejestr Operacji Systemowych</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Arsenał - Historia Logów</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/logo-v2.png">
+    <link rel="apple-touch-icon" href="/logo-v2.png">
+    <meta name="theme-color" content="#0f172a">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-            --text-primary: #ffffff;
-            --terminal-green: #10b981;
-            --terminal-red: #ff4757;
-            --terminal-blue: #3b82f6;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            font-family: 'Poppins', sans-serif;
-            margin: 0; display: flex; min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 280px; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(20px);
-            border-right: var(--glass-border); padding: 40px 30px; display: flex; flex-direction: column;
-        }
-        .logo { font-size: 1.8rem; font-weight: 800; margin-bottom: 60px; color: #fff; }
+        :root { --bg-color: #0f172a; --accent: #667eea; --glass: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.1); --text: #fff; }
         
-        /* Linki w menu */
-        a { text-decoration: none; }
-        .nav-item { padding: 14px 20px; margin-bottom: 8px; border-radius: 14px; color: #94a3b8; display: flex; align-items: center; gap: 15px; font-weight: 500; transition: 0.3s; }
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .nav-item.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
-
-        .main { flex: 1; padding: 50px; overflow-y: auto; }
-
-        /* TABELA LOGÓW */
-        .log-container {
-            background: #000;
-            border: 1px solid #333;
-            border-radius: 10px;
-            padding: 20px;
-            font-family: 'Fira Code', monospace; /* Czcionka koderska */
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
-        }
-
-        .log-header {
-            display: grid;
-            grid-template-columns: 200px 150px 1fr;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #333;
-            color: #666;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            margin-bottom: 10px;
-        }
-
-        .log-row {
-            display: grid;
-            grid-template-columns: 200px 150px 1fr;
-            padding: 12px 0;
-            border-bottom: 1px dashed #222;
-            align-items: center;
-            transition: 0.2s;
-        }
-
-        .log-row:hover { background: rgba(255,255,255,0.05); }
-
-        .log-date { color: #888; font-size: 0.9rem; }
+        body { background: var(--bg-color); color: var(--text); font-family: 'Poppins', sans-serif; margin: 0; padding: 40px; min-height: 100vh; }
         
-        .badge {
-            display: inline-block; padding: 4px 10px; border-radius: 4px; 
-            font-size: 0.75rem; font-weight: bold; text-align: center; width: fit-content;
-        }
+        /* TŁO (to samo co na głównej) */
+        .background-blobs { position: fixed; width: 100%; height: 100%; z-index: -1; top: 0; left: 0; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.3; }
+        .b1 { top: -10%; left: -10%; width: 600px; height: 600px; background: #764ba2; } 
+        .b2 { bottom: -10%; right: -10%; width: 600px; height: 600px; background: #667eea; }
+
+        .container { max-width: 1000px; margin: 0 auto; background: var(--glass); backdrop-filter: blur(20px); padding: 30px; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+
+        h1 { margin-top: 0; font-size: 1.8rem; display: flex; align-items: center; gap: 10px; }
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: #94a3b8; margin-bottom: 20px; transition: 0.3s; }
+        .back-btn:hover { color: #fff; transform: translateX(-5px); }
+
+        /* TABELA */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; color: #94a3b8; padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; color: #fff; /* KLUCZOWE: BIAŁY TEKST */ }
         
-        .type-add { color: var(--terminal-green); border: 1px solid var(--terminal-green); background: rgba(16, 185, 129, 0.1); }
-        .type-del { color: var(--terminal-red); border: 1px solid var(--terminal-red); background: rgba(255, 71, 87, 0.1); }
-        .type-mod { color: var(--terminal-blue); border: 1px solid var(--terminal-blue); background: rgba(59, 130, 246, 0.1); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
 
-        .log-desc { color: #ddd; }
+        /* BADGE DLA AKCJI */
+        .badge { padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; display: inline-block; }
+        .badge-DOSTAWA { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-WYDANIE { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-KOREKTA { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-EDYCJA, .badge-MODYFIKACJA { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-USUNIĘCIE { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+        
+        .timestamp { font-family: 'Courier New', monospace; color: #64748b; font-size: 0.85rem; }
 
+        /* RESPANSYWNOŚĆ */
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            td, th { padding: 10px 5px; font-size: 0.8rem; }
+            .badge { padding: 3px 6px; font-size: 0.65rem; }
+        }
     </style>
 </head>
 <body>
+    <div class="background-blobs"><div class="blob b1"></div><div class="blob b2"></div></div>
 
-    <nav class="sidebar">
-        <div class="logo"><i class="fa-solid fa-cube"></i> ARSENAŁ</div>
+    <div class="container">
+        <a href="/" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Wróć do Magazynu</a>
         
-        <a href="/" class="nav-item">
-            <i class="fa-solid fa-layer-group"></i> Stan Magazynu
-        </a>
-        
-        <a href="/historia" class="nav-item active">
-            <i class="fa-solid fa-clipboard-list"></i> Rejestr Operacji
-        </a>
+        <h1><i class="fa-solid fa-clock-rotate-left"></i> Dziennik Operacyjny</h1>
+        <p style="color:#64748b; margin-top:-10px; margin-bottom:30px;">Pełna historia zdarzeń w systemie Arsenał.</p>
 
-        <div style="margin-top: auto;">
-            <form action="/logout" method="POST" style="margin:0">
-                <button style="background:none; border:none; width:100%; padding:0;">
-                    <div class="nav-item" style="color: #ff4757;"><i class="fa-solid fa-right-from-bracket"></i> Wyloguj</div>
-                </button>
-            </form>
-        </div>
-    </nav>
-
-    <main class="main">
-        <header style="margin-bottom: 40px;">
-            <h1 style="margin:0">Rejestr Zdarzeń</h1>
-            <p style="color:#94a3b8; margin:5px 0 0">Pełna historia operacji na magazynie [READ-ONLY]</p>
-        </header>
-
-        <div class="log-container">
-            <div class="log-header">
-                <div>Sygnatura Czasowa</div>
-                <div>Typ Operacji</div>
-                <div>Szczegóły Zdarzenia</div>
+        <% if (logi.length === 0) { %>
+            <div style="text-align:center; padding:40px; color:#64748b;">
+                <i class="fa-regular fa-folder-open" style="font-size:2rem; margin-bottom:10px;"></i>
+                <p>Brak wpisów w dzienniku.</p>
             </div>
-
-            <% if(logi.length === 0) { %>
-                <div style="padding: 20px; text-align: center; color: #444;">-- BRAK WPISÓW W REJESTRZE --</div>
-            <% } %>
-
-            <% logi.forEach(wpis => { %>
-                <div class="log-row">
-                    <div class="log-date"><%= wpis.data %></div>
-                    
-                    <div>
-                        <% if (wpis.typ === 'DOSTAWA') { %>
-                            <span class="badge type-add">DOSTAWA [+]</span>
-                        <% } else if (wpis.typ === 'LIKWIDACJA') { %>
-                            <span class="badge type-del">USUNIĘCIE [!]</span>
-                        <% } else { %>
-                            <span class="badge type-mod">MODYFIKACJA</span>
-                        <% } %>
-                    </div>
-                    
-                    <div class="log-desc"><%= wpis.opis %></div>
-                </div>
-            <% }) %>
-        </div>
-    </main>
-
+        <% } else { %>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Czas</th>
+                        <th>Akcja</th>
+                        <th>Szczegóły</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% logi.forEach(linia => { 
+                        // Parsowanie linii: [Data] [AKCJA] Opis
+                        // Używamy prostego wyrażenia regularnego, żeby wyciągnąć to co w nawiasach
+                        const match = linia.match(/\[(.*?)\] \[(.*?)\] (.*)/);
+                        
+                        if (match) {
+                            const czas = match[1];
+                            const akcja = match[2];
+                            const opis = match[3];
+                    %>
+                        <tr>
+                            <td class="timestamp"><%= czas %></td>
+                            <td><span class="badge badge-<%= akcja %>"><%= akcja %></span></td>
+                            <td><%= opis %></td>
+                        </tr>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="3" style="color:#64748b;"><%= linia %></td>
+                        </tr>
+                    <% } }) %>
+                </tbody>
+            </table>
+        <% } %>
+    </div>
 </body>
 </html>
