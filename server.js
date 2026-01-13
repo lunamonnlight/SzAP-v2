@@ -128,5 +128,30 @@ app.post('/zmien/:id/:akcja', wymaganeLogowanie, (req, res) => {
     }
     res.redirect('/');
 });
+ // --- NOWOŚĆ: WYDAWANIE SPRZĘTU ---
+app.post('/wydaj', wymaganeLogowanie, (req, res) => {
+    let arsenal = wczytajPlik(DATA_FILE);
+    const id = parseInt(req.body.id);
+    const iloscDoWydania = parseInt(req.body.ilosc);
+    const odbiorca = req.body.odbiorca;
+    const cel = req.body.cel;
+
+    const index = arsenal.findIndex(item => item.id === id);
+
+    if (index !== -1) {
+        // Sprawdzamy, czy mamy tyle na stanie
+        if (arsenal[index].ilosc >= iloscDoWydania) {
+            arsenal[index].ilosc -= iloscDoWydania;
+            zapiszPlik(DATA_FILE, arsenal);
+            
+            // Logujemy szczegółowo kto i po co
+            logujAkcje("WYDANIE", `Wydano: ${iloscDoWydania}szt. ${arsenal[index].nazwa} | Odbiorca: ${odbiorca} | Cel: ${cel}`);
+        } else {
+            // Tu można by dodać obsługę błędu, ale na razie po prostu nie wydamy
+            console.log("BRAK TOWARU NA STANIE!"); 
+        }
+    }
+    res.redirect('/');
+});]
 
 app.listen(PORT, () => console.log(`📸 SzAP v2 z Obsługą FOTO działa na porcie ${PORT}`));
